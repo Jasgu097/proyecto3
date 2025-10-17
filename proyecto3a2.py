@@ -7,6 +7,7 @@ import tkinter as tk
 from tkinter import filedialog, messagebox
 import heapq
 import os
+#Es necesario descargar la biblioteca pillow para poder usar el PIL
 from PIL import Image
 import wave
 from collections import Counter
