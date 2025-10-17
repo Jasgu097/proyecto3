@@ -1,0 +1,10 @@
+este es un archivo de texto en el que pondré a prueba el funcionamiento de nuestro programa por lo que espero que esto sea suficiente para saber si se esta comprimiendo el archivo de texto y asi podamos pasar el curso.
+
+¿Qué es un texto?
+Un texto es una composición ordenada de signos escritos en un soporte material, elaborada a partir de un sistema de escritura. Su lectura permite al receptor recuperar el sentido que el emisor quiso comunicar.
+
+Se compone de una serie de enunciados relacionados entre sí y ordenados según una intención comunicativa (como explicar, narrar, describir o argumentar). Para ello, se utiliza un sistema de signos conocido como lenguaje, y dentro de este, un código concreto denominado lengua o idioma.
+
+En consecuencia, todos los textos contienen mensajes codificados que el lector debe interpretar, y que pueden ser de muy diversa naturaleza. Desde las instrucciones de uso de un electrodoméstico hasta un poema de amor, las noticias periodística o un graffiti de protesta, los textos siempre transmiten algún tipo de mensaje destinado a un lector o receptor determinado.
+
+De esta manera, un texto puede tener distintas funciones comunicativas: informar, advertir, enseñar, expresar una idea o un sentimiento, relatar una historia o incluso influir en el comportamiento del lector, es decir, persuadirlo o solicitarle una acción específica.
