@@ -13,7 +13,7 @@ from collections import Counter
 import pickle
 
 
-
+#Clase para la codificacion de texto en algoritmo huffman
 class HuffmanCoderText:
     """Implementa compresión/descompresión Huffman para texto"""
 
@@ -60,6 +60,7 @@ class HuffmanCoderText:
                     break
         return ''.join(result)
 
+#Clase para la codificacion de sonido en algoritmo huffman
 class HuffmanCoderSound:
     """Implementa compresión/descompresión Huffman para  bytes"""
 
@@ -116,7 +117,7 @@ class HuffmanCoderSound:
         return bytes(result)
 
 
-
+#Clase para la codificacion de imagen en algoritmo Run Length Encoding
 class RLECoder:
     """Implementa compresión/descompresión Run Length Encoding"""
 
@@ -149,6 +150,7 @@ class RLECoder:
         return bytes(decoded)
 
 
+#Menu principal del codigo
 class CompressionApp:
     def __init__(self, root):
         self.root = root
@@ -186,7 +188,7 @@ class CompressionApp:
         for widget in self.root.winfo_children():
             widget.destroy()
 
-    # ---------- TEXTO ----------
+    # ---------- VENTANA DE TEXTO ----------
     def text_compression_window(self):
         self.clear_window()
 
@@ -273,7 +275,7 @@ class CompressionApp:
         except Exception as e:
             messagebox.showerror("Error", str(e))
 
-    # ---------- IMAGEN ----------
+    # ---------- VENTANA DE IMAGEN ----------
     def image_compression_window(self):
         self.clear_window()
 
@@ -352,7 +354,7 @@ class CompressionApp:
         except Exception as e:
             messagebox.showerror("Error", str(e))
 
-    # ---------- AUDIO ----------
+    # ---------- VENTANA DE AUDIO ----------
     def audio_compression_window(self):
         self.clear_window()
 
@@ -377,7 +379,7 @@ class CompressionApp:
                   command=self.setup_main_menu).pack(pady=5)
 
     def select_audio_file(self):
-        file = filedialog.askopenfilename(filetypes=[("Audio or HUFF files", "*.wav *.huff *.mp3")])
+        file = filedialog.askopenfilename(filetypes=[("Audio or HUFF files", "*.wav *.huff")])
         if file:
             self.audio_file_path.set(file)
 
@@ -431,6 +433,7 @@ class CompressionApp:
                                 f"Audio descomprimido guardado en:\n{output_path}")
         except Exception as e:
             messagebox.showerror("Error", str(e))
+
 
 
 if __name__ == "__main__":
