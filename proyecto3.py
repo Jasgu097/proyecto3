@@ -8,7 +8,8 @@ from collections import Counter
 import pickle
 
 
-class HuffmanCoder:
+
+class HuffmanCoderText:
     """Implementa compresión/descompresión Huffman para texto"""
 
     def __init__(self):
@@ -53,6 +54,62 @@ class HuffmanCoder:
                     i += length
                     break
         return ''.join(result)
+
+class HuffmanCoderSound:
+    """Implementa compresión/descompresión Huffman para  bytes"""
+
+    def __init__(self):
+        self.codes = {}
+        self.reverse_codes = {}
+
+    def _build_tree(self, frequencies):
+        heap = [[freq, [char, ""]] for char, freq in frequencies.items()]
+        heapq.heapify(heap)
+        while len(heap) > 1:
+            lo = heapq.heappop(heap)
+            hi = heapq.heappop(heap)
+            for pair in lo[1:]:
+                pair[1] = '0' + pair[1]
+            for pair in hi[1:]:
+                pair[1] = '1' + pair[1]
+            heapq.heappush(heap, [lo[0] + hi[0]] + lo[1:] + hi[1:])
+        return sorted(heapq.heappop(heap)[1:], key=lambda p: (len(p[-1]), p))
+
+    def encode_bytes(self, data: bytes):
+        """Codifica datos binarios usando Huffman"""
+        if not data:
+            return b'', {}
+
+        frequencies = Counter(data)
+        tree = self._build_tree(frequencies)
+        self.codes = {char: code for char, code in tree}
+        bitstring = ''.join(self.codes[byte] for byte in data)
+
+        # Empaquetar bits a bytes
+        padding = 8 - len(bitstring) % 8
+        bitstring += '0' * padding
+        b = bytearray()
+        for i in range(0, len(bitstring), 8):
+            b.append(int(bitstring[i:i + 8], 2))
+        return bytes(b), self.codes, padding
+
+    def decode_bytes(self, bit_bytes, codes, padding):
+        """Decodifica datos binarios comprimidos con Huffman"""
+        reverse_codes = {v: k for k, v in codes.items()}
+        bitstring = ''.join(f'{byte:08b}' for byte in bit_bytes)
+        bitstring = bitstring[:-padding]
+
+        result = []
+        i = 0
+        while i < len(bitstring):
+            for length in range(1, len(bitstring) - i + 1):
+                code = bitstring[i:i + length]
+                if code in reverse_codes:
+                    result.append(reverse_codes[code])
+                    i += length
+                    break
+        return bytes(result)
+
 
 
 class RLECoder:
@@ -161,7 +218,7 @@ class CompressionApp:
         try:
             with open(path, 'r', encoding='utf-8') as f:
                 text = f.read()
-            huffman = HuffmanCoder()
+            huffman = HuffmanCoderText()
             bitstring, codes = huffman.encode(text)
 
             # Empaquetar bits a bytes
@@ -200,7 +257,7 @@ class CompressionApp:
             bitstring = ''.join(f'{byte:08b}' for byte in bit_bytes)
             bitstring = bitstring[:-padding]  # quitar padding
 
-            huffman = HuffmanCoder()
+            huffman = HuffmanCoderText()
             decoded = huffman.decode(bitstring, codes)
 
             output_path = path.replace('_compressed.bin', '_decompressed.txt')
@@ -302,7 +359,7 @@ class CompressionApp:
         frame = tk.Frame(self.root, bg="#f0f0f0")
         frame.pack(pady=10)
 
-        tk.Button(frame, text="Seleccionar archivo (.wav/.rle)",
+        tk.Button(frame, text="Seleccionar archivo (.wav/.huff)",
                   command=self.select_audio_file).pack(pady=5)
         tk.Label(frame, textvariable=self.audio_file_path,
                  bg="#f0f0f0", wraplength=400).pack(pady=5)
@@ -315,7 +372,7 @@ class CompressionApp:
                   command=self.setup_main_menu).pack(pady=5)
 
     def select_audio_file(self):
-        file = filedialog.askopenfilename(filetypes=[("Audio or RLE files", "*.wav *.rle")])
+        file = filedialog.askopenfilename(filetypes=[("Audio or HUFF files", "*.wav *.huff")])
         if file:
             self.audio_file_path.set(file)
 
@@ -328,36 +385,45 @@ class CompressionApp:
             with wave.open(path, 'rb') as f:
                 params = f.getparams()
                 frames = f.readframes(f.getnframes())
-            compressed = RLECoder.encode(frames)
-            output_path = path.replace('.wav', '_compressed.rle')
+
+            huffman = HuffmanCoderSound()
+            compressed, codes, padding = huffman.encode_bytes(frames)
+
+            output_path = path.replace('.wav', '_compressed.huff')
             with open(output_path, 'wb') as f:
-                f.write(params.nchannels.to_bytes(2, 'big'))
-                f.write(params.sampwidth.to_bytes(2, 'big'))
-                f.write(params.framerate.to_bytes(4, 'big'))
-                f.write(compressed)
-            messagebox.showinfo("Éxito", f"Audio comprimido guardado en:\n{output_path}")
+                pickle.dump((compressed, codes, padding, params), f)
+
+            original_size = os.path.getsize(path)
+            compressed_size = os.path.getsize(output_path)
+            ratio = (1 - compressed_size / original_size) * 100
+
+            messagebox.showinfo("Éxito",
+                                f"Compresión Huffman completada\n\n"
+                                f"Original: {original_size} bytes\n"
+                                f"Comprimido: {compressed_size} bytes\n"
+                                f"Reducción: {ratio:.2f}%")
         except Exception as e:
             messagebox.showerror("Error", str(e))
 
     def decompress_audio(self):
         path = self.audio_file_path.get()
-        if not path.endswith('.rle'):
-            messagebox.showerror("Error", "Selecciona un archivo .rle")
+        if not path.endswith('.huff'):
+            messagebox.showerror("Error", "Selecciona un archivo .huff")
             return
         try:
             with open(path, 'rb') as f:
-                nchannels = int.from_bytes(f.read(2), 'big')
-                sampwidth = int.from_bytes(f.read(2), 'big')
-                framerate = int.from_bytes(f.read(4), 'big')
-                compressed_data = f.read()
-            decoded = RLECoder.decode(compressed_data)
-            output_path = path.replace('_compressed.rle', '_decompressed.wav')
+                compressed, codes, padding, params = pickle.load(f)
+
+            huffman = HuffmanCoderSound()
+            decoded = huffman.decode_bytes(compressed, codes, padding)
+
+            output_path = path.replace('_compressed.huff', '_decompressed.wav')
             with wave.open(output_path, 'wb') as f:
-                f.setnchannels(nchannels)
-                f.setsampwidth(sampwidth)
-                f.setframerate(framerate)
+                f.setparams(params)
                 f.writeframes(decoded)
-            messagebox.showinfo("Éxito", f"Audio descomprimido guardado en:\n{output_path}")
+
+            messagebox.showinfo("Éxito",
+                                f"Audio descomprimido guardado en:\n{output_path}")
         except Exception as e:
             messagebox.showerror("Error", str(e))
 
@@ -366,3 +432,6 @@ if __name__ == "__main__":
     root = tk.Tk()
     app = CompressionApp(root)
     root.mainloop()
+
+
+
